@@ -1,0 +1,81 @@
+{
+  "entities": {
+    "Scan": {
+      "title": "Scan",
+      "description": "A food scan performed by a user",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "foodName": { "type": "string" },
+        "brachaCategory": { "type": "string" },
+        "confidence": { "type": "number" },
+        "requires_multiple_blessings": { "type": "boolean" },
+        "how_to_eat_instructions_en": { "type": "string" },
+        "how_to_eat_instructions_he": { "type": "string" },
+        "isExtended": { "type": "boolean" },
+        "items": { "type": "array" },
+        "meal_summary": { "type": "object" },
+        "createdAt": { "type": "number" },
+        "scan_code": { "type": "string" }
+      },
+      "required": ["userId", "imageUrl", "foodName", "brachaCategory", "confidence", "createdAt"]
+    },
+    "Question": {
+      "title": "Question",
+      "description": "A question asked to the rav (rabbi) by a user",
+      "type": "object",
+      "properties": {
+        "text": { "type": "string" },
+        "category": { "type": "string" },
+        "status": { "type": "string" },
+        "photo": { "type": "string" },
+        "createdAt": { "type": "number" },
+        "userId": { "type": "string" }
+      },
+      "required": ["text", "category", "status", "createdAt", "userId"]
+    },
+    "Feedback": {
+      "title": "Feedback",
+      "description": "Feedback submitted on a scan outcome",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "scanId": { "type": "string" },
+        "feedback_type": { "type": "string", "enum": ["good", "bad"] },
+        "feedback_text": { "type": "string" },
+        "timestamp": { "type": "number" },
+        "foodDetected": { "type": "string" },
+        "confidence": { "type": "number" },
+        "language": { "type": "string" },
+        "tradition": { "type": "string" },
+        "type": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "explanation": { "type": "string" }
+      },
+      "required": ["userId", "scanId", "feedback_type", "feedback_text", "timestamp"]
+    }
+  },
+  "firestore": {
+    "users/{userId}/scans/{scanId}": {
+      "schema": { "$ref": "#/entities/Scan" },
+      "description": "Scans belonging to a user"
+    },
+    "users/{userId}/questions/{questionId}": {
+      "schema": { "$ref": "#/entities/Question" },
+      "description": "Questions asked to the rav belonging to a user"
+    },
+    "questions/{questionId}": {
+      "schema": { "$ref": "#/entities/Question" },
+      "description": "Questions in the main questions collection"
+    },
+    "ask_rav/{questionId}": {
+      "schema": { "$ref": "#/entities/Question" },
+      "description": "Questions asked to the rav in the main ask_rav collection"
+    },
+    "feedbacks/{feedbackId}": {
+      "schema": { "$ref": "#/entities/Feedback" },
+      "description": "Feedback records submitted by users"
+    }
+  }
+}

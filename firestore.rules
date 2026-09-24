@@ -1,0 +1,85 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} { allow read, write: if false; }
+
+    function isSignedIn() { return request.auth != null; }
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    function isUserDoc(userId) { return isSignedIn() && request.auth.uid == userId; }
+    
+    // We prefer using custom claims, but as fallback we check the doc if claims not present.
+    function isSuperAdmin() {
+      return isSignedIn() && request.auth.token.email == 'yehonatanmarko100@gmail.com';
+    }
+    function isCallerAdmin() {
+      return isSignedIn() && (
+        isSuperAdmin() || 
+        request.auth.token.get('admin', false) == true ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
+      );
+    }
+    function isCallerRav() {
+      return isSignedIn() && (
+        request.auth.token.get('rav', false) == true ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'rav')
+      );
+    }
+
+    match /users/{userId} {
+      allow read: if isUserDoc(userId) || isCallerAdmin() || isCallerRav();
+      allow create: if isUserDoc(userId) && (
+          isSuperAdmin() || (
+            incoming().role == 'user'
+            && incoming().get('spamWarningCount', 0) == 0
+            && (!('bannedUntil' in incoming()) || incoming().bannedUntil == null)
+            && (!('isBannedUntil' in incoming()) || incoming().isBannedUntil == null)
+          )
+        );
+      allow update: if isCallerAdmin() || (isUserDoc(userId) && 
+        (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'email', 'bannedUntil', 'isBannedUntil', 'spamWarningCount'])));
+    }
+
+    match /questions/{questionId} {
+      allow read: if isCallerAdmin();
+    }
+
+    match /ask_rav/{questionId} {
+      allow read: if isUserDoc(existing().userId) || isCallerRav() || isCallerAdmin();
+      allow create: if isSignedIn() && incoming().userId == request.auth.uid && incoming().status == 'pool';
+      allow update: if isCallerAdmin() || (isCallerRav() && existing().status == 'pool' && incoming().status == 'claimed' && incoming().ravId == request.auth.uid);
+    }
+    
+    match /app_reports/{docId} {
+      allow read: if isCallerAdmin();
+      allow create: if isSignedIn() && incoming().userId == request.auth.uid;
+    }
+    match /reported_missing_foods/{docId} {
+      allow read: if isCallerAdmin();
+      allow create: if isSignedIn() && incoming().userId == request.auth.uid;
+    }
+    match /blessing_dedications/{docId} {
+      allow read: if true;
+    }
+    match /scans/{scanId} {
+      allow read: if isUserDoc(existing().userId) || isCallerAdmin();
+      allow create: if isSignedIn() && incoming().userId == request.auth.uid;
+    }
+    match /answers/{answerId} {
+      allow read: if isUserDoc(existing().userId) || isCallerRav() || isCallerAdmin();
+    }
+    match /feedbacks/{feedbackId} {
+      allow create: if isSignedIn() && incoming().userId == request.auth.uid;
+    }
+    
+    match /users/{userId}/questions/{questionId} {
+      allow read: if isUserDoc(userId) || isCallerAdmin();
+      allow create: if isUserDoc(userId) && incoming().userId == request.auth.uid;
+    }
+    match /users/{userId}/scans/{scanId} {
+      allow read: if isUserDoc(userId) || isCallerAdmin();
+      allow create: if isUserDoc(userId) && incoming().userId == request.auth.uid;
+    }
+  }
+}

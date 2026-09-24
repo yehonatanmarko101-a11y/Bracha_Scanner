@@ -1,0 +1,10 @@
+{
+  "name": "Remix: BrachaScanner",
+  "description": "A food scanner app that helps Jewish users identify and recite the correct blessings (brachot) for foods they consume.",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

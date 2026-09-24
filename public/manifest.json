@@ -1,0 +1,24 @@
+{
+  "short_name": "BrachaScanner",
+  "name": "BrachaScanner - AI Blessing Detector",
+  "description": "Scan food to see the correct blessings (brachot) to say before and after eating.",
+  "icons": [
+    {
+      "src": "/icon-192.png?v=2",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png?v=2",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#ffffff",
+  "theme_color": "#1d4ed8",
+  "display": "standalone",
+  "orientation": "portrait"
+}
